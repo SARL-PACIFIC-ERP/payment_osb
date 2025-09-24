@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_osb_card_system,osb.card.system,model_osb_card,base.group_system,1,1,1,1
+access_osb_language_system,osb.language.system,model_osb_language,base.group_system,1,1,1,1

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+# Copyright © Lyra Network.
+# This file is part of OSB plugin for Odoo. See COPYING.md for license details.
+#
+# Author:    Lyra Network (https://www.lyra.com)
+# Copyright: Copyright © Lyra Network
+# License:   http://www.gnu.org/licenses/agpl.html GNU Affero General Public License (AGPL v3)
+-->
+
+<odoo>
+    <data noupdate="1">
+        <record id="payment_provider_osbmulti" model="payment.provider">
+            <field name="name"><![CDATA[OSB - Payment in installments]]></field>
+            <field name="image" type="base64" file="payment_osb/static/src/img/logo.png" />
+            <field name="image_128" type="base64" file="payment_osb/static/src/img/logo.png" />
+            <field name="code">osbmulti</field>
+            <field name="state">test</field>
+            <field name="company_id" ref="base.main_company" />
+            <field name="redirect_form_view_id" ref="osb_provider_button" />
+            <field name="environment">test</field>
+            <field name="pre_msg"><![CDATA[<p>You will be redirected to the OSB website after clicking on the payment button.</p>]]></field>
+
+            <field name="osb_capture_delay"></field>
+            <field name="osb_validation_mode">-1</field>
+            <field name="osb_threeds_min_amount"></field>
+            <field name="osb_multi_count">3</field>
+            <field name="osb_multi_period">30</field>
+            <field name="osb_multi_first"></field>
+            <field name="osb_redirect_enabled">0</field>
+            <field name="osb_redirect_success_timeout">5</field>
+            <field name="osb_redirect_error_timeout">5</field>
+            <field name="osb_return_mode">POST</field>
+            <field name="payment_method_ids"
+                eval="[Command.set([
+                          ref('payment_osb.payment_method_osbmulti'),
+                      ])]"
+            />
+        </record>
+    </data>
+</odoo>

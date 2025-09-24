@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+# Copyright © Lyra Network.
+# This file is part of OSB plugin for Odoo. See COPYING.md for license details.
+#
+# Author:    Lyra Network (https://www.lyra.com)
+# Copyright: Copyright © Lyra Network
+# License:   http://www.gnu.org/licenses/agpl.html GNU Affero General Public License (AGPL v3)
+-->
+
+<odoo>
+    <data>
+        <record id="provider_form_osb" model="ir.ui.view">
+            <field name="name">OSB Provider Form</field>
+            <field name="model">payment.provider</field>
+            <field name="inherit_id" ref="payment.payment_provider_form" />
+            <field name="arch" type="xml">
+                <group name="provider_credentials" position='after'>
+                    <div invisible="code not in ('osb', 'osbmulti')">
+                        <group name="osb_module_information" string="MODULE INFORMATION">
+                            <field name="osb_doc" />
+                        </group>
+                        <group name="osb_gateway_access" string="PAYMENT GATEWAY ACCESS">
+                            <field name="osb_site_id" autocomplete="off" required="code in ('osb', 'osbmulti')" />
+                            <field name="osb_key_test" autocomplete="off" required="code in ('osb', 'osbmulti')" invisible="code == 'osb' and osb_payment_data_entry_mode != 'redirect'" />
+                            <field name="osb_key_prod" autocomplete="off" required="code in ('osb', 'osbmulti')" invisible="code == 'osb' and osb_payment_data_entry_mode != 'redirect'" />
+                            <field name="osb_sign_algo" required="code in ('osb', 'osbmulti')" invisible="code == 'osb' and osb_payment_data_entry_mode != 'redirect'" />
+                            <field name="osb_notify_url" invisible="code == 'osb' and osb_payment_data_entry_mode != 'redirect'" />
+                        </group>
+                        <div invisible="code != 'osb'">
+                            <group name="osb_rest_api_keys" string="REST API KEYS" invisible="osb_payment_data_entry_mode == 'redirect'">
+                                <field name="osb_test_password" autocomplete="off" password="True" />
+                                <field name="osb_prod_password" autocomplete="off" password="True" />
+                                <field name="osb_public_test_key" autocomplete="off" />
+                                <field name="osb_public_production_key" autocomplete="off" />
+                                <field name="osb_sha256_test_key" autocomplete="off" password="True" />
+                                <field name="osb_sha256_prod_key" autocomplete="off" password="True" />
+                                <field name="osb_rest_api_notify_url" />
+                            </group>
+                            <group name="osb_advanced_options" string="ADVANCED OPTIONS" >
+                                <field name="osb_payment_data_entry_mode" required="code == 'osb'" />
+                                <field name="osb_embedded_pop_in" required="code == 'osb'" invisible="osb_payment_data_entry_mode == 'redirect'" />
+                                <field name="osb_embedded_theme" required="code == 'osb'" invisible="osb_payment_data_entry_mode == 'redirect'" />
+                                <field name="osb_embedded_compact_mode" required="code == 'osb'" invisible="osb_payment_data_entry_mode == 'redirect'" />
+                                <field name="osb_embedded_payment_attempts" invisible="osb_payment_data_entry_mode == 'redirect'" />
+                            </group>
+                        </div>
+                        <group string="PAYMENT PAGE">
+                            <field name="osb_language" required="code in ('osb', 'osbmulti')" invisible="code == 'osb' and osb_payment_data_entry_mode != 'redirect'" />
+                            <field name="osb_available_languages" widget="many2many_tags" options="{'no_create': True}" invisible="code == 'osb' and osb_payment_data_entry_mode != 'redirect'" />
+                            <field name="osb_capture_delay" />
+                            <field name="osb_validation_mode" required="code in ('osb', 'osbmulti')" />
+                            <field name="osb_payment_cards" widget="many2many_tags" options="{'no_create': True}" />
+                        </group>
+                        <group name="osb_selective_3ds" string="CUSTOM 3DS" invisible="code == 'osb' and osb_payment_data_entry_mode != 'redirect'">
+                            <field name="osb_threeds_min_amount" />
+                        </group>
+                        <group string="RETURN TO SHOP" invisible="code == 'osb' and osb_payment_data_entry_mode != 'redirect'">
+                            <field name="osb_redirect_enabled" required="code in ('osb', 'osbmulti')" />
+                            <field name="osb_redirect_success_timeout" />
+                            <field name="osb_redirect_success_message" />
+                            <field name="osb_redirect_error_timeout" />
+                            <field name="osb_redirect_error_message" />
+                            <field name="osb_return_mode" required="code in ('osb', 'osbmulti')" />
+                        </group>
+                    </div>
+                </group>
+            </field>
+        </record>
+
+        <record id="transaction_form_osb" model="ir.ui.view">
+            <field name="name">OSB Transaction Form</field>
+            <field name="model">payment.transaction</field>
+            <field name="inherit_id" ref="payment.payment_transaction_form" />
+            <field name="arch" type="xml">
+                <field name="provider_reference" position="after">
+                    <field name="osb_trans_status" invisible="provider_code not in ('osb', 'osbmulti')" />
+                    <field name="osb_card_brand" invisible="provider_code not in ('osb', 'osbmulti')" />
+                    <field name="osb_card_number" invisible="provider_code not in ('osb', 'osbmulti')" />
+                    <field name="osb_expiration_date" invisible="provider_code not in ('osb', 'osbmulti')" />
+                    <field name="osb_auth_result" invisible="provider_code not in ('osb', 'osbmulti')" />
+                </field>
+
+                <xpath expr="//form/sheet/group[last()]" position="after">
+                    <group string="Transaction log" invisible="provider_code not in ('osb', 'osbmulti')">
+                        <field name="osb_raw_data" nolabel="1" />
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+
+    <function model="payment.provider" name="multi_add">
+        <value>/views/payment_provider_views_multi.xml</value>
+        <value>False</value>
+    </function>
+</odoo>

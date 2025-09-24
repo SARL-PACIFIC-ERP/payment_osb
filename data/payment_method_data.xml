@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+# Copyright © Lyra Network.
+# This file is part of OSB plugin for Odoo. See COPYING.md for license details.
+#
+# Author:    Lyra Network (https://www.lyra.com)
+# Copyright: Copyright © Lyra Network
+# License:   http://www.gnu.org/licenses/agpl.html GNU Affero General Public License (AGPL v3)
+-->
+
+<odoo noupdate="1">
+    <record id="payment_method_osb" model="payment.method">
+        <field name="name"><![CDATA[OSB]]></field>
+        <field name="code">osb</field>
+        <field name="sequence">1000</field>
+        <field name="image" type="base64" file="payment/static/img/card.png" />
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+    </record>
+
+    <record id="payment_method_osbmulti" model="payment.method">
+        <field name="name"><![CDATA[OSB Multi]]></field>
+        <field name="code">osbmulti</field>
+        <field name="sequence">1000</field>
+        <field name="image" type="base64" file="payment/static/img/card.png" />
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+    </record>
+
+    <record id="payment_method_osbcb" model="payment.method">
+        <field name="name">CB</field>
+        <field name="code">osbcb</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
+        <field name="sequence">1000</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="payment_osb/static/src/img/cb.png" />
+    </record>
+
+    <record id="payment_method_osbvisa" model="payment.method">
+        <field name="name">Visa</field>
+        <field name="code">osbvisa</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
+        <field name="sequence">1000</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="payment/static/img/visa.png" />
+    </record>
+
+    <record id="payment_method_osbmastercard" model="payment.method">
+        <field name="name">Mastercard</field>
+        <field name="code">osbmastercard</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
+        <field name="sequence">1000</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="payment/static/img/mastercard.png" />
+    </record>
+
+    <record id="payment_method_osbamex" model="payment.method">
+        <field name="name">American Express</field>
+        <field name="code">osbamex</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
+        <field name="sequence">1000</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="payment/static/img/amex.png" />
+    </record>
+
+     <record id="payment_method_osbecardtebleue" model="payment.method">
+        <field name="name">e-Carte Bleue</field>
+        <field name="code">osbecartebleue</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="base64" file="payment_osb/static/src/img/e-cartebleue.png" />
+    </record>
+
+    <record id="payment_method_osbvisaelectron" model="payment.method">
+        <field name="name">Visa Electron</field>
+        <field name="code">osbvisaelectron</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="base64" file="payment_osb/static/src/img/visa_electron.png" />
+    </record>
+
+    <record id="payment_method_osbvpay" model="payment.method">
+        <field name="name">V PAY</field>
+        <field name="code">osbvpay</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="base64" file="payment/static/img/vpay.png" />
+    </record>
+
+    <record id="payment_method_osbapplepay" model="payment.method">
+        <field name="name">Apple Pay</field>
+        <field name="code">osbapplepay</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="base64" file="payment/static/img/apple_pay.png" />
+    </record>
+
+     <record id="payment_method_osbpaypal" model="payment.method">
+        <field name="name">PayPal</field>
+        <field name="code">osbpaypal</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="base64" file="payment/static/img/paypal.png" />
+    </record>
+
+    <record id="payment_method_osbmulticb" model="payment.method">
+        <field name="name">CB</field>
+        <field name="code">osbmulticb</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osbmulti')" />
+        <field name="sequence">1000</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="payment_osb/static/src/img/cb.png" />
+    </record>
+
+    <record id="payment_method_osbmultivisa" model="payment.method">
+        <field name="name">Visa</field>
+        <field name="code">osbmultivisa</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osbmulti')" />
+        <field name="sequence">1000</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="payment/static/img/visa.png" />
+    </record>
+
+    <record id="payment_method_osbmultimastercard" model="payment.method">
+        <field name="name">Mastercard</field>
+        <field name="code">osbmultimastercard</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osbmulti')" />
+        <field name="sequence">1000</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="payment/static/img/mastercard.png" />
+    </record>
+
+    <record id="payment_method_osbmultiamex" model="payment.method">
+        <field name="name">American Express</field>
+        <field name="code">osbmultiamex</field>
+        <field name="primary_payment_method_id" eval="ref('payment_method_osbmulti')" />
+        <field name="sequence">1000</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="payment/static/img/amex.png" />
+    </record>
+</odoo>
