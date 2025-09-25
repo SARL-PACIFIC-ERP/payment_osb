@@ -70,7 +70,7 @@
     </template>
 
     <template id="osb_inline_embedded">
-        <t t-set="payment_provider_model" t-value="request.env['payment.provider'].search([('code', '=', 'osb')])[0]" />
+        <t t-set="payment_provider_model" t-value="request.env['payment.provider'].sudo().search([('code', '=', 'osb')])[0]" />
         <t t-set="inline_form_values"
            t-value="payment_provider_model._osb_get_inline_form_values(
                amount,
