@@ -1,10 +1,10 @@
 # coding: utf-8
 #
-# Copyright © Lyra Network.
-# This file is part of OSB plugin for Odoo. See COPYING.md for license details.
+# Copyright © Osb Network.
+# This file is part of Osb Collect plugin for Odoo. See COPYING.md for license details.
 #
-# Author:    Lyra Network (https://www.lyra.com)
-# Copyright: Copyright © Lyra Network
+# Author:    Osb Network (https://www.osb.com)
+# Copyright: Copyright © Osb Network
 # License:   http://www.gnu.org/licenses/agpl.html GNU Affero General Public License (AGPL v3)
 
 from datetime import datetime
@@ -42,7 +42,7 @@ class TransactionOsb(models.Model):
     # --------------------------------------------------
 
     def _get_specific_rendering_values(self, processing_values):
-        """ Override of payment to return OSB specific rendering values. """
+        """ Override of payment to return Osb specific rendering values. """
         res = super()._get_specific_rendering_values(processing_values)
         if self.provider_code not in ['osb', 'osbmulti']:
             return res
@@ -114,14 +114,14 @@ class TransactionOsb(models.Model):
             reference = tx.reference
         else:
             if not reference or not status or (not shasign and not is_rest):
-                error_msg = 'OSB : received bad data'
+                error_msg = 'Osb Collect : received bad data'
                 _logger.error(error_msg)
                 raise ValidationError(error_msg)
 
             tx = self.search([('reference', '=', reference)])
 
         if not tx or len(tx) > 1:
-            error_msg = 'OSB: received data for reference {}'.format(reference)
+            error_msg = 'Osb Collect: received data for reference {}'.format(reference)
             if not tx:
                 error_msg += '; no order found'
             else:
@@ -130,26 +130,63 @@ class TransactionOsb(models.Model):
             _logger.error(error_msg)
             raise ValidationError(error_msg)
 
-         # Verify signature.
+        # Verify signature.
         if shasign:
             shasign_check = tx.provider_id._osb_generate_sign('out', notification_data)
             if shasign_check.upper() != shasign.upper():
-                error_msg = 'OSB: invalid signature, received {}, computed {}, for data {}'.format(shasign, shasign_check, notification_data)
+                error_msg = 'Osb Collect: invalid signature, received {}, computed {}, for data {}'.format(shasign, shasign_check, notification_data)
                 _logger.info(error_msg)
 
                 raise ValidationError(error_msg)
+
         return tx
 
     def _get_tx_from_notification_data(self, provider_code, notification_data):
-        tx = super()._get_tx_from_notification_data(provider_code, notification_data)
-        if provider_code != 'osb' and self.provider_code != 'osbmulti':
-            return tx
+        if provider_code in ['osb', 'osbmulti']:
+            return self._osb_get_tx_from_notification_data(notification_data)
+        elif hasattr(self, '_search_by_reference') and callable(getattr(self, '_search_by_reference')):
+            return super()._search_by_reference(provider_code, notification_data)
+        else:
+            return super()._get_tx_from_notification_data(provider_code, notification_data)
 
-        return self._osb_get_tx_from_notification_data(notification_data)
+    def _handle_notification_data(self, provider_code, notification_data):
+        if hasattr(super(), '_handle_notification_data') and callable(getattr(super(), '_handle_notification_data')):
+            return super()._handle_notification_data(provider_code, notification_data)
+
+        return super()._process(provider_code, notification_data)
+
+    def _apply_updates(self, payment_data):
+        """Override of `payment` to update the transaction based on the payment data."""
+        if self.provider_code not in ['osb', 'osbmulti']:
+            return super()._apply_updates(payment_data)
+
+        self._process_notification_data(payment_data)
+
+    def _extract_amount_data(self, payment_data):
+        """Override of payment to extract the amount and currency from the payment data."""
+        if self.provider_code not in ['osb', 'osbmulti']:
+            return super()._extract_amount_data(payment_data)
+
+        currency_num = payment_data['vads_currency']
+        currency = tools.find_currency_by_num(currency_num)
+        if currency is None:
+            _logger.error('Unsupported currency with numeric code {}.'.format(currency_num))
+            raise ValidationError(_('Currency with numeric code {} is not supported.').format(currency_num))
+
+        # Amount in cents.
+        k = int(currency[2])
+        amount = round(int(payment_data['vads_amount']) / (10 ** k), 2)
+
+        return {
+            'amount': amount,
+            'currency_code': currency[0]
+        }
 
     def _process_notification_data(self, notification_data):
-        super()._process_notification_data(notification_data)
-        if self.provider_code != 'osb' and self.provider_code != 'osbmulti':
+        if hasattr(super(), '_process_notification_data') and callable(getattr(super(), '_process_notification_data')):
+            super()._process_notification_data(notification_data)
+
+        if self.provider_code not in ['osb', 'osbmulti']:
             return
 
         self.provider_reference = notification_data.get('vads_ext_info_order_ref') or notification_data.get('vads_order_id')
@@ -191,7 +228,7 @@ class TransactionOsb(models.Model):
             auth_result = notification_data.get('vads_auth_result')
             auth_message = _('See the transaction details for more information ({}).').format(auth_result)
 
-            error_msg = 'OSB payment error, transaction status: {}, authorization result: {}.'.format(status, auth_result)
+            error_msg = 'Osb Collect payment error, transaction status: {}, authorization result: {}.'.format(status, auth_result)
             _logger.info(error_msg)
 
             values.update({

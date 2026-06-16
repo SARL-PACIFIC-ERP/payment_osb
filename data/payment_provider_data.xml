@@ -12,8 +12,6 @@
     <data noupdate="1">
         <record id="payment_provider_osb" model="payment.provider">
             <field name="name"><![CDATA[OSB - Standard payment]]></field>
-            <field name="image" type="base64" file="payment_osb/static/src/img/logo.png" />
-            <field name="image_128" type="base64" file="payment_osb/static/src/img/logo.png" />
             <field name="code">osb</field>
             <field name="state">test</field>
             <field name="company_id" ref="base.main_company" />
@@ -36,9 +34,4 @@
             />
         </record>
     </data>
-
-    <function model="payment.provider" name="multi_add">
-        <value>/data/payment_provider_data_multi.xml</value>
-        <value>True</value>
-    </function>
 </odoo>

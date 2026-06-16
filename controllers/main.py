@@ -1,10 +1,10 @@
 # coding: utf-8
 #
-# Copyright © Lyra Network.
-# This file is part of OSB plugin for Odoo. See COPYING.md for license details.
+# Copyright © Osb Network.
+# This file is part of Osb Collect plugin for Odoo. See COPYING.md for license details.
 #
-# Author:    Lyra Network (https://www.lyra.com)
-# Copyright: Copyright © Lyra Network
+# Author:    Osb Network (https://www.osb.com)
+# Copyright: Copyright © Osb Network
 # License:   http://www.gnu.org/licenses/agpl.html GNU Affero General Public License (AGPL v3)
 
 import logging
@@ -35,7 +35,7 @@ class OsbController(http.Controller):
     )
     def osb_return_from_checkout(self, **pdt_data):
         # Check payment result and create transaction.
-        _logger.info('OSB: entering _from_notification with data %s', pprint.pformat(pdt_data))
+        _logger.info('Osb Collect: customer returns to shop with data %s', pprint.pformat(pdt_data))
 
         try:
             is_rest = False
@@ -54,7 +54,7 @@ class OsbController(http.Controller):
                 hmac256_key = tx_sudo.provider_id._osb_get_rest_sha256_key()
                 hash_checked = tools.check_hash(pdt_data, hmac256_key)
                 if not hash_checked:
-                    error_msg = 'OSB: invalid signature for data {}'.format(pdt_data)
+                    error_msg = 'Osb Collect: invalid signature for data {}'.format(pdt_data)
                     _logger.info(error_msg)
 
                     raise ValidationError(error_msg)
@@ -62,8 +62,9 @@ class OsbController(http.Controller):
             # Handle the notification data.
             tx_sudo._handle_notification_data('osb', data)
         except ValidationError:
-            _logger.exception("OSB: Unable to handle the return notification data; skipping to acknowledge.")
+            _logger.exception("Osb Collect: Unable to handle the return notification data; skipping to acknowledge.")
 
+        # Redirect the user to the status page.
         return request.redirect('/payment/status')
 
     @http.route(_notify_url, type='http', auth='public', methods=['POST'], csrf=False,
@@ -71,7 +72,7 @@ class OsbController(http.Controller):
     )
     def osb_ipn(self, **post):
         # Check payment result and create transaction.
-        _logger.info('OSB: entering IPN _get_tx_from_notification with post data %s', pprint.pformat(post))
+        _logger.info('Osb Collect: entering IPN _get_tx_from_notification with post data %s', pprint.pformat(post))
 
         try:
             is_rest = False
@@ -92,7 +93,7 @@ class OsbController(http.Controller):
                 rest_password = result.provider_id._osb_get_rest_password()
                 hash_checked = tools.check_hash(post, rest_password)
                 if not hash_checked:
-                    error_msg = 'OSB: invalid signature for data {}'.format(post)
+                    error_msg = 'Osb Collect: invalid signature for data {}'.format(post)
                     _logger.info(error_msg)
 
                     raise ValidationError(error_msg)
@@ -103,7 +104,7 @@ class OsbController(http.Controller):
             # Handle the notification data.
             result._handle_notification_data('osb', data)
         except ValidationError: # Acknowledge the notification to avoid getting spammed.
-            _logger.exception("OSB: Unable to handle the IPN notification data; skipping to acknowledge.")
+            _logger.exception("Osb Collect: Unable to handle the IPN notification data; skipping to acknowledge.")
             return 'Bad request received.'
 
         return 'Payment processed, order has been updated.' if result else 'An error occurred while processing payment.'

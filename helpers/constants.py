@@ -31,26 +31,26 @@ OSB_PARAMS = {
     'LANGUAGE': 'fr',
 
     'GATEWAY_VERSION': 'V2',
-    'PLUGIN_VERSION': '4.2.0',
-    'CMS_IDENTIFIER': 'Odoo_17-18',
+    'PLUGIN_VERSION': '4.3.0',
+    'CMS_IDENTIFIER': 'Odoo_17-19',
     'REST_URL': 'https://api.secure.osb.pf/api-payment/',
     'STATIC_URL': 'https://static.osb.pf/static/'
 }
 
 OSB_LANGUAGES = {
-    'cn': "Chinese",
-    'de': "German",
-    'es': "Spanish",
-    'en': "English",
-    'fr': "French",
-    'it': "Italian",
-    'jp': "Japanese",
-    'nl': "Dutch",
-    'pl': "Polish",
-    'pt': "Portuguese",
-    'ru': "Russian",
-    'sv': "Swedish",
-    'tr': "Turkish",
+    'cn': _lt("Chinese"),
+    'de': _lt("German"),
+    'es': _lt("Spanish"),
+    'en': _lt("English"),
+    'fr': _lt("French"),
+    'it': _lt("Italian"),
+    'jp': _lt("Japanese"),
+    'nl': _lt("Dutch"),
+    'pl': _lt("Polish"),
+    'pt': _lt("Portuguese"),
+    'ru': _lt("Russian"),
+    'sv': _lt("Swedish"),
+    'tr': _lt("Turkish"),
 }
 
 OSB_CARDS = {

@@ -1,10 +1,10 @@
 # coding: utf-8
 #
-# Copyright © Lyra Network.
-# This file is part of OSB plugin for Odoo. See COPYING.md for license details.
+# Copyright © Osb Network.
+# This file is part of Osb Collect plugin for Odoo. See COPYING.md for license details.
 #
-# Author:    Lyra Network (https://www.lyra.com)
-# Copyright: Copyright © Lyra Network
+# Author:    Osb Network (https://www.osb.com)
+# Copyright: Copyright © Osb Network
 # License:   http://www.gnu.org/licenses/agpl.html GNU Affero General Public License (AGPL v3)
 
 import base64
@@ -14,14 +14,11 @@ import hmac
 import logging
 from os import path
 
-from pkg_resources import parse_version
-
-from odoo import models, api, fields, _
+from odoo import models, api, fields, _, release
 from odoo.exceptions import ValidationError
 from odoo.tools import convert_xml_import
 from odoo.tools import float_round
 from odoo.tools import get_lang
-from odoo.tools.float_utils import float_compare
 from odoo.http import request
 
 from ..controllers.main import OsbController
@@ -40,8 +37,7 @@ class ProviderOsb(models.Model):
     _inherit = 'payment.provider'
 
     def _get_notify_url(self):
-        base_url = self.env['ir.config_parameter'].get_param('web.base.url')
-        return urlparse.urljoin(base_url, OsbController._notify_url)
+        return urlparse.urljoin(self.get_base_url(), OsbController._notify_url)
 
     def _get_languages(self):
         languages = constants.OSB_LANGUAGES
@@ -72,30 +68,30 @@ class ProviderOsb(models.Model):
 
         return ("embedded")
 
-    sign_algo_help = 'Algorithm used to compute the payment form signature. Selected algorithm must be the same as one configured in the OSB Back Office.'
+    sign_algo_help = 'Algorithm used to compute the payment form signature. Selected algorithm must be the same as one configured in the Osb Expert Back Office.'
 
     if constants.OSB_PLUGIN_FEATURES.get('shatwo') == False:
-        sign_algo_help += 'The HMAC-SHA-256 algorithm should not be activated if it is not yet available in the OSB Back Office, the feature will be available soon.'
+        sign_algo_help += 'The HMAC-SHA-256 algorithm should not be activated if it is not yet available in the Osb Expert Back Office, the feature will be available soon.'
 
-    providers = [('osb', 'OSB - Standard payment')]
+    providers = [('osb', 'Osb Collect - Standard payment')]
     ondelete_policy = {'osb': 'set default'}
 
     if constants.OSB_PLUGIN_FEATURES.get('multi') == True:
-        providers.append(('osbmulti', 'OSB - Payment in installments'))
+        providers.append(('osbmulti', 'Osb Collect - Payment in installments'))
         ondelete_policy['osbmulti'] = 'set default'
 
     code = fields.Selection(selection_add=providers, ondelete = ondelete_policy)
 
     osb_doc = fields.Html(string='Click to view the module configuration documentation', default=osb_get_doc_field_value(), readonly=True)
-    osb_site_id = fields.Char(string='Shop ID', help='The identifier provided by OSB.', default=constants.OSB_PARAMS.get('SITE_ID'))
-    osb_key_test = fields.Char(string='Key in test mode', help='Key provided by OSB for test mode (available in OSB Back Office).', default=constants.OSB_PARAMS.get('KEY_TEST'), readonly=constants.OSB_PLUGIN_FEATURES.get('qualif'))
-    osb_key_prod = fields.Char(string='Key in production mode', help='Key provided by OSB (available in OSB Back Office after enabling production mode).', default=constants.OSB_PARAMS.get('KEY_PROD'))
+    osb_site_id = fields.Char(string='Shop ID', help='The identifier provided by Osb Collect.', default=constants.OSB_PARAMS.get('SITE_ID'))
+    osb_key_test = fields.Char(string='Key in test mode', help='Key provided by Osb Collect for test mode (available in Osb Expert Back Office).', default=constants.OSB_PARAMS.get('KEY_TEST'), readonly=constants.OSB_PLUGIN_FEATURES.get('qualif'))
+    osb_key_prod = fields.Char(string='Key in production mode', help='Key provided by Osb Collect (available in Osb Expert Back Office after enabling production mode).', default=constants.OSB_PARAMS.get('KEY_PROD'))
     osb_sign_algo = fields.Selection(string='Signature algorithm', help=sign_algo_help, selection=[('SHA-1', 'SHA-1'), ('SHA-256', 'HMAC-SHA-256')], default=constants.OSB_PARAMS.get('SIGN_ALGO'))
-    osb_notify_url = fields.Char(string='Instant Payment Notification URL', help='URL to copy into your OSB Back Office > Settings > Notification rules.', default=_get_notify_url, readonly=True)
+    osb_notify_url = fields.Char(string='Instant Payment Notification URL', help='URL to copy into your Osb Expert Back Office > Settings > Notification rules.', default=_get_notify_url, readonly=True)
     osb_language = fields.Selection(string='Default language', help='Default language on the payment page.', default=constants.OSB_PARAMS.get('LANGUAGE'), selection=_get_languages)
     osb_available_languages = fields.Many2many('osb.language', string='Available languages', column1='code', column2='label', help='Languages available on the payment page. If you do not select any, all the supported languages will be available.')
-    osb_capture_delay = fields.Char(string='Capture delay', help='The number of days before the bank capture (adjustable in your OSB Back Office).')
-    osb_validation_mode = fields.Selection(string='Validation mode', help='If manual is selected, you will have to confirm payments manually in your OSB Back Office.', selection=[('-1', 'OSB Back Office Configuration'), ('0', 'Automatic'), ('1', 'Manual')])
+    osb_capture_delay = fields.Char(string='Capture delay (if applicable)', help='The number of days before the bank capture (adjustable in your Osb Expert Back Office).')
+    osb_validation_mode = fields.Selection(string='Validation mode (if applicable)', help='If manual is selected, you will have to confirm payments manually in your Osb Expert Back Office.', selection=[('-1', 'Osb Expert Back Office Configuration'), ('0', 'Automatic'), ('1', 'Manual')])
     osb_payment_cards = fields.Many2many('osb.card', string='Card types', column1='code', column2='label', help='The card type(s) that can be used for the payment. Select none to use gateway configuration.')
     osb_threeds_min_amount = fields.Char(string='Manage 3DS', help='Amount below which customer could be exempt from strong authentication. Needs subscription to «Selective 3DS1» or «Frictionless 3DS2» options. For more information, refer to the module documentation.')
     osb_redirect_enabled = fields.Selection(string='Automatic redirection', help='If enabled, the buyer is automatically redirected to your site at the end of the payment.', selection=[('0', 'Disabled'), ('1', 'Enabled')])
@@ -116,41 +112,30 @@ class ProviderOsb(models.Model):
     osb_public_production_key = fields.Char(string='Public production key', help=constants.OSB_REST_API_KEYS_DESC)
     osb_sha256_test_key = fields.Char(string='HMAC-SHA-256 test key', help=constants.OSB_REST_API_KEYS_DESC)
     osb_sha256_prod_key = fields.Char(string='HMAC-SHA-256 production key', help=constants.OSB_REST_API_KEYS_DESC)
-    osb_rest_api_notify_url = fields.Char(string='REST API Notification URL', help='URL to copy into your OSB Back Office > Settings > Notification rules.', default=_get_notify_url, readonly=True)
+    osb_rest_api_notify_url = fields.Char(string='REST API Notification URL', help='URL to copy into your Osb Expert Back Office > Settings > Notification rules.', default=_get_notify_url, readonly=True)
 
-    osb_payment_data_entry_mode = fields.Selection(string='Payment data entry mode', help='Select how the payment data will be entered. Attention, to use the embedded payment fields, you must ensure that you have subscribed to this option with OSB.', selection=_get_entry_modes, default=_get_default_entry_mode)
+    osb_payment_data_entry_mode = fields.Selection(string='Payment data entry mode', help='Select how the payment data will be entered. Attention, to use the embedded payment fields, you must ensure that you have subscribed to this option with Osb Collect.', selection=_get_entry_modes, default=_get_default_entry_mode)
     osb_embedded_pop_in = fields.Selection(string='Display in a pop-in', help='This option allows to display the embedded payment fields in a pop-in.', selection=[('0', 'No'), ('1', 'Yes')], default='0')
     osb_embedded_theme = fields.Selection(string='Theme', help='Select a theme to use to display the embedded payment fields.', selection=[('neon', 'Neon'), ('classic', 'Classic')], default='neon')
     osb_embedded_compact_mode = fields.Selection(string='Compact mode', help='This option allows to display the embedded payment fields in a compact mode.', selection=[('0', 'Disabled'), ('1', 'Enabled')], default='0')
     osb_embedded_payment_attempts = fields.Char(string='Payment attempts number for cards', help='Maximum number of payment by cards retries after a failed payment (between 0 and 2). If blank, the gateway default value is 2.')
 
-    image = fields.Char("Image (OSB)")
     environment = fields.Char()
 
     osb_redirect = False
 
     @api.model
     def _get_compatible_providers(self, *args, currency_id=None, **kwargs):
-        """ Override of payment to unlist OSB providers when the currency is not supported. """
+        """ Override of payment to unlist Osb Collect providers when the currency is not supported. """
         providers = super()._get_compatible_providers(*args, currency_id=currency_id, **kwargs)
 
         currency = self.env['res.currency'].browse(currency_id).exists()
-        if currency and currency.name and tools.find_currency(currency.name) is None:
+        if currency and currency.name and tools.find_currency_by_code(currency.name) is None:
             providers = providers.filtered(
                 lambda p: p.code not in ['osb', 'osbmulti']
             )
 
         return providers
-
-    @api.model
-    def multi_add(self, filename, noupdate):
-        if (constants.OSB_PLUGIN_FEATURES.get('multi') == True):
-            module_upgrade = self.env['ir.module.module'].search([('state', '=', 'to upgrade'), ('name', '=', 'payment_osb')])
-            file = path.join(path.dirname(path.dirname(path.abspath(__file__)))) + filename
-            mode = 'update' if module_upgrade else 'init'
-            convert_xml_import(self.env, 'payment_osb', file, None, mode, noupdate)
-
-        return None
 
     def _get_ctx_mode(self):
         ctx_key = self.state
@@ -189,8 +174,6 @@ class ProviderOsb(models.Model):
         return payment_config
 
     def osb_form_generate_values(self, values):
-        base_url = request.httprequest.host_url
-
         threeds_mpi = u''
         if self.osb_threeds_min_amount and float(self.osb_threeds_min_amount) > values['amount']:
             threeds_mpi = u'2'
@@ -201,7 +184,7 @@ class ProviderOsb(models.Model):
         else:
             currency = self.env['res.currency'].browse(values['currency_id']).exists()
 
-        currency_num = tools.find_currency(currency.name)
+        currency_num = tools.find_currency_by_code(currency.name)
         if currency_num is None:
             _logger.error('The plugin cannot find a numeric code for the current shop currency {}.'.format(currency.name))
             raise ValidationError(_('The shop currency {} is not supported.').format(currency.name))
@@ -240,7 +223,7 @@ class ProviderOsb(models.Model):
             'vads_action_mode': u'INTERACTIVE',
             'vads_payment_config': self._osb_payment_config(amount),
             'vads_version': constants.OSB_PARAMS.get('GATEWAY_VERSION'),
-            'vads_url_return': urlparse.urljoin(base_url, OsbController._return_url),
+            'vads_url_return': self._osb_get_return_url(),
             'vads_order_id': str(order_id),
             'vads_ext_info_order_ref': str(values.get('reference')),
             'vads_contrib': tools._osb_get_contrib(),
@@ -273,7 +256,7 @@ class ProviderOsb(models.Model):
         return osb_tx_values
 
     def osb_generate_values_from_order(self, data):
-        sale_order = self.env['sale.order'].sudo().search([('id', '=', data['order_id'])]).exists()
+        sale_order = request.env['sale.order'].sudo().search([('id', '=', data['order_id'])]).exists()
 
         currency = self._osb_get_currency(data['currency_id'])
         amount = float(sale_order.amount_total)
@@ -346,7 +329,7 @@ class ProviderOsb(models.Model):
         return constants.OSB_PARAMS.get('GATEWAY_URL')
 
     def _get_default_payment_method_codes(self):
-        if self.code != 'osb' and self.code != 'osbmulti':
+        if self.code not in ['osb', 'osbmulti']:
             return super()._get_default_payment_method_codes()
 
         return self.code
@@ -397,7 +380,7 @@ class ProviderOsb(models.Model):
         return constants.OSB_PARAMS.get('STATIC_URL') + "js/krypton-client/V4.0/ext/" + self.osb_embedded_theme + ".js"
 
     def _osb_get_return_url(self):
-        return urlparse.urljoin(self.env['ir.config_parameter'].get_param('web.base.url'), OsbController._return_url)
+        return urlparse.urljoin(request.httprequest.host_url, OsbController._return_url)
 
     def _osb_get_embedded_language(self):
         return get_lang(self.env).code[:2]
@@ -411,7 +394,7 @@ class ProviderOsb(models.Model):
 
     def _osb_get_currency(self, currency_id):
         # Give the iso and the number of decimal toward the smallest monetary unit from the id of the currency.
-        currency_name = tools.find_currency(self.env['res.currency'].search([('id', '=', currency_id)]).exists().name) 
+        currency_name = tools.find_currency_by_code(self.env['res.currency'].search([('id', '=', currency_id)]).exists().name)
         for currency in constants.OSB_CURRENCIES:
             if currency[1] == str(currency_name):
                 return (currency[0], currency[2])
@@ -421,7 +404,7 @@ class ProviderOsb(models.Model):
     def _osb_get_inline_form_values(
         self, amount, currency, partner_id, is_validation, payment_method_sudo, sale_order_id, **kwargs
     ):
-        sale_order = self.env['sale.order'].sudo().search([('id', '=', sale_order_id)]).exists()
+        sale_order = request.env['sale.order'].sudo().search([('id', '=', sale_order_id)]).exists()
         values = {
             "provider_id": self.id,
             "provider_code" : "osb",

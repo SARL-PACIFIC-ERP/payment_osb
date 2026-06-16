@@ -1,10 +1,10 @@
 # coding: utf-8
 #
-# Copyright © Lyra Network.
-# This file is part of OSB plugin for Odoo. See COPYING.md for license details.
+# Copyright © Osb Network.
+# This file is part of Osb Collect plugin for Odoo. See COPYING.md for license details.
 #
-# Author:    Lyra Network (https://www.lyra.com)
-# Copyright: Copyright © Lyra Network
+# Author:    Osb Network (https://www.osb.com)
+# Copyright: Copyright © Osb Network
 # License:   http://www.gnu.org/licenses/agpl.html GNU Affero General Public License (AGPL v3)
 
 import logging
@@ -42,7 +42,15 @@ class OsbRestController(http.Controller):
                 return json.dumps({ "formToken": "NO_UPDATE" })
 
             processed_values = payment_transaction._get_specific_rendering_values(processing_values)
-            processed_values["vads_order_id"] = processing_values["reference"].rpartition('-')[0]
+
+            reference = processing_values["reference"]
+            index = reference.find("-")
+            if index < 0:
+                order_id = reference
+            else:
+                order_id = reference[:index]
+
+            processed_values["vads_order_id"] = order_id;
 
         currency = payment_provider._osb_get_currency(processing_values["currency_id"])[0]
 

@@ -9,18 +9,19 @@
 
 {
     'name': 'OSB Payment Provider',
-    'version': '18.0.4.2.2',
+    'version': '19.0.4.3.0',
     'summary': 'Accept payments with OSB secure payment gateway.',
     'category': 'Accounting/Payment Providers',
     'author': 'Lyra Network',
     'website': 'https://www.lyra.com/',
     'license': 'AGPL-3',
-    'depends': ['payment','sale'],
+    'depends': ['payment'],
     'data': [
         'views/payment_provider_views.xml',
         'views/payment_osb_templates.xml',
         'data/payment_method_data.xml',
         'data/payment_provider_data.xml',
+        'data/payment_provider_data_multi.xml',
         'security/ir.model.access.csv',
     ],
     'assets': {
