@@ -19,11 +19,12 @@ class OsbLanguage(models.Model):
     code = fields.Char()
     label = fields.Char()
 
-    def init(self):
+    def init(self) -> None:
         languages = constants.OSB_LANGUAGES
 
         for c, l in languages.items():
             lang = self.search([('code', '=', c)])
 
             if not lang:
-                self.create({'code': c, 'label': l})
+                # Convert lazy translation to string to avoid translation context warnings
+                self.create({'code': c, 'label': str(l)})
