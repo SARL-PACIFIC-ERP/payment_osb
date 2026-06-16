@@ -89,9 +89,4 @@
             </field>
         </record>
     </data>
-
-    <function model="payment.provider" name="multi_add">
-        <value>/views/payment_provider_views_multi.xml</value>
-        <value>False</value>
-    </function>
 </odoo>
