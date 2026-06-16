@@ -32,9 +32,7 @@
             <field name="osb_redirect_error_timeout">5</field>
             <field name="osb_return_mode">POST</field>
             <field name="payment_method_ids"
-                eval="[Command.set([
-                          ref('payment_osb.payment_method_osbmulti'),
-                      ])]"
+                eval="[(6, 0, [ref('payment_osb.payment_method_osbmulti')])]"
             />
         </record>
     </data>
