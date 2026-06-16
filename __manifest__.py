@@ -18,6 +18,7 @@
     'depends': ['payment', 'account'],
     'data': [
         'views/payment_provider_views.xml',
+        'views/payment_provider_views_multi.xml',
         'views/payment_osb_templates.xml',
         'data/payment_method_data.xml',
         'data/payment_provider_data.xml',
