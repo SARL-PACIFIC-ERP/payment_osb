@@ -15,7 +15,7 @@
     'author': 'Lyra Network',
     'website': 'https://www.lyra.com/',
     'license': 'AGPL-3',
-    'depends': ['payment'],
+    'depends': ['payment', 'account'],
     'data': [
         'views/payment_provider_views.xml',
         'views/payment_osb_templates.xml',
