@@ -15,6 +15,7 @@ import json
 from odoo.tools import float_round
 from odoo import http
 from odoo.http import request
+from odoo.exceptions import ValidationError
 
 from ..helpers import tools, constants
 _logger = logging.getLogger(__name__)
@@ -34,7 +35,8 @@ class OsbRestController(http.Controller):
             payment_transaction = request.env['payment.transaction'].sudo().search([('reference', '=', processing_values["reference"])]).exists()
 
             sale_order = payment_transaction.sale_order_ids[0]
-            sale_order._check_cart_is_ready_to_be_paid()
+            if not sale_order._is_cart_ready_for_payment():
+                raise ValidationError(request.env._("Your cart is not ready to be paid, please verify previous steps."))
 
             # Check amount coherence.
             compare_amounts = sale_order.currency_id.compare_amounts

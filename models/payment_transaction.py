@@ -150,10 +150,8 @@ class TransactionOsb(models.Model):
             return super()._get_tx_from_notification_data(provider_code, notification_data)
 
     def _handle_notification_data(self, provider_code, notification_data):
-        if hasattr(super(), '_handle_notification_data') and callable(getattr(super(), '_handle_notification_data')):
-            return super()._handle_notification_data(provider_code, notification_data)
-
-        return super()._process(provider_code, notification_data)
+        self._record(notification_data)
+        return self
 
     def _apply_updates(self, payment_data):
         """Override of `payment` to update the transaction based on the payment data."""

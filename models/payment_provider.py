@@ -16,7 +16,6 @@ from os import path
 
 from odoo import models, api, fields, _, release
 from odoo.exceptions import ValidationError
-from odoo.tools import convert_xml_import
 from odoo.tools import float_round
 from odoo.tools import get_lang
 from odoo.http import request
@@ -125,9 +124,9 @@ class ProviderOsb(models.Model):
     osb_redirect = False
 
     @api.model
-    def _get_compatible_providers(self, *args, currency_id=None, **kwargs):
+    def _find_available_providers(self, *args, currency_id=None, **kwargs):
         """ Override of payment to unlist Osb Collect providers when the currency is not supported. """
-        providers = super()._get_compatible_providers(*args, currency_id=currency_id, **kwargs)
+        providers = super()._find_available_providers(*args, currency_id=currency_id, **kwargs)
 
         currency = self.env['res.currency'].browse(currency_id).exists()
         if currency and currency.name and tools.find_currency_by_code(currency.name) is None:
@@ -138,8 +137,7 @@ class ProviderOsb(models.Model):
         return providers
 
     def _get_ctx_mode(self):
-        ctx_key = self.state
-        ctx_value = 'TEST' if ctx_key == 'test' else 'PRODUCTION'
+        ctx_value = 'PRODUCTION' if self.is_live else 'TEST'
 
         return ctx_value
 
@@ -353,19 +351,19 @@ class ProviderOsb(models.Model):
         return supported_currencies
 
     def _osb_get_rest_password(self):
-        if self.state == 'test':
+        if not self.is_live:
             return str(self.osb_test_password)
 
         return str(self.osb_prod_password)
 
     def _osb_get_rest_public_key(self):
-        if self.state == 'test':
+        if not self.is_live:
             return str(self.osb_public_test_key)
 
         return str(self.osb_public_production_key)
 
     def _osb_get_rest_sha256_key(self):
-        if self.state == 'test':
+        if not self.is_live:
             return str(self.osb_sha256_test_key)
 
         return str(self.osb_sha256_prod_key)

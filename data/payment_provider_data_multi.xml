@@ -14,7 +14,6 @@
             <field name="name"><![CDATA[OSB - Payment in installments]]></field>
             <field name="image_128" type="bytes" file="payment_osb/static/src/img/logo.png" />
             <field name="code">osbmulti</field>
-            <field name="state">test</field>
             <field name="company_id" ref="base.main_company" />
             <field name="redirect_form_view_id" ref="osb_provider_button" />
             <field name="environment">test</field>
@@ -30,9 +29,6 @@
             <field name="osb_redirect_success_timeout">5</field>
             <field name="osb_redirect_error_timeout">5</field>
             <field name="osb_return_mode">POST</field>
-            <field name="payment_method_ids"
-                eval="[(6, 0, [ref('payment_osb.payment_method_osbmulti')])]"
-            />
         </record>
     </data>
 </odoo>

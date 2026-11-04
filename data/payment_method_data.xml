@@ -12,6 +12,7 @@
     <record id="payment_method_osb" model="payment.method">
         <field name="name"><![CDATA[OSB]]></field>
         <field name="code">osb</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="sequence">1000</field>
         <field name="image" type="bytes" file="payment/static/img/card.png" />
         <field name="support_tokenization">False</field>
@@ -21,6 +22,7 @@
     <record id="payment_method_osbmulti" model="payment.method">
         <field name="name"><![CDATA[OSB Multi]]></field>
         <field name="code">osbmulti</field>
+        <field name="provider_id" ref="payment_provider_osbmulti" />
         <field name="sequence">1000</field>
         <field name="image" type="bytes" file="payment/static/img/card.png" />
         <field name="support_tokenization">False</field>
@@ -30,6 +32,7 @@
     <record id="payment_method_osbcb" model="payment.method">
         <field name="name">CB</field>
         <field name="code">osbcb</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
         <field name="sequence">1000</field>
         <field name="active">True</field>
@@ -39,6 +42,7 @@
     <record id="payment_method_osbvisa" model="payment.method">
         <field name="name">Visa</field>
         <field name="code">osbvisa</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
         <field name="sequence">1000</field>
         <field name="active">True</field>
@@ -48,6 +52,7 @@
     <record id="payment_method_osbmastercard" model="payment.method">
         <field name="name">Mastercard</field>
         <field name="code">osbmastercard</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
         <field name="sequence">1000</field>
         <field name="active">True</field>
@@ -57,6 +62,7 @@
     <record id="payment_method_osbamex" model="payment.method">
         <field name="name">American Express</field>
         <field name="code">osbamex</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
         <field name="sequence">1000</field>
         <field name="active">True</field>
@@ -66,6 +72,7 @@
      <record id="payment_method_osbecardtebleue" model="payment.method">
         <field name="name">e-Carte Bleue</field>
         <field name="code">osbecartebleue</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
         <field name="sequence">1000</field>
         <field name="active">False</field>
@@ -75,6 +82,7 @@
     <record id="payment_method_osbvisaelectron" model="payment.method">
         <field name="name">Visa Electron</field>
         <field name="code">osbvisaelectron</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
         <field name="sequence">1000</field>
         <field name="active">False</field>
@@ -84,6 +92,7 @@
     <record id="payment_method_osbvpay" model="payment.method">
         <field name="name">V PAY</field>
         <field name="code">osbvpay</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
         <field name="sequence">1000</field>
         <field name="active">False</field>
@@ -93,6 +102,7 @@
     <record id="payment_method_osbapplepay" model="payment.method">
         <field name="name">Apple Pay</field>
         <field name="code">osbapplepay</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
         <field name="sequence">1000</field>
         <field name="active">False</field>
@@ -102,6 +112,7 @@
      <record id="payment_method_osbpaypal" model="payment.method">
         <field name="name">PayPal</field>
         <field name="code">osbpaypal</field>
+        <field name="provider_id" ref="payment_provider_osb" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osb')" />
         <field name="sequence">1000</field>
         <field name="active">False</field>
@@ -111,6 +122,7 @@
     <record id="payment_method_osbmulticb" model="payment.method">
         <field name="name">CB</field>
         <field name="code">osbmulticb</field>
+        <field name="provider_id" ref="payment_provider_osbmulti" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osbmulti')" />
         <field name="sequence">1000</field>
         <field name="active">True</field>
@@ -120,6 +132,7 @@
     <record id="payment_method_osbmultivisa" model="payment.method">
         <field name="name">Visa</field>
         <field name="code">osbmultivisa</field>
+        <field name="provider_id" ref="payment_provider_osbmulti" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osbmulti')" />
         <field name="sequence">1000</field>
         <field name="active">True</field>
@@ -129,6 +142,7 @@
     <record id="payment_method_osbmultimastercard" model="payment.method">
         <field name="name">Mastercard</field>
         <field name="code">osbmultimastercard</field>
+        <field name="provider_id" ref="payment_provider_osbmulti" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osbmulti')" />
         <field name="sequence">1000</field>
         <field name="active">True</field>
@@ -138,6 +152,7 @@
     <record id="payment_method_osbmultiamex" model="payment.method">
         <field name="name">American Express</field>
         <field name="code">osbmultiamex</field>
+        <field name="provider_id" ref="payment_provider_osbmulti" />
         <field name="primary_payment_method_id" eval="ref('payment_method_osbmulti')" />
         <field name="sequence">1000</field>
         <field name="active">True</field>

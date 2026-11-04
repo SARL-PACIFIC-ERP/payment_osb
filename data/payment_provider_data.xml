@@ -13,7 +13,6 @@
         <record id="payment_provider_osb" model="payment.provider">
             <field name="name"><![CDATA[OSB - Standard payment]]></field>
             <field name="code">osb</field>
-            <field name="state">test</field>
             <field name="company_id" ref="base.main_company" />
             <field name="redirect_form_view_id" ref="osb_provider_button" />
             <field name="inline_form_view_id" ref="osb_inline_embedded" />
@@ -27,9 +26,6 @@
             <field name="osb_redirect_success_timeout">5</field>
             <field name="osb_redirect_error_timeout">5</field>
             <field name="osb_return_mode">POST</field>
-            <field name="payment_method_ids"
-                eval="[(6, 0, [ref('payment_osb.payment_method_osb')])]"
-            />
         </record>
     </data>
 </odoo>
