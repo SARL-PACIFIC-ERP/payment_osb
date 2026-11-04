@@ -23,7 +23,7 @@
         'data/payment_method_data.xml',
         'data/payment_provider_data.xml',
         'data/payment_provider_data_multi.xml',
-        'security/ir.model.access.csv',
+        'security/ir.access.csv',
     ],
     'assets': {
         'web.assets_frontend': [
