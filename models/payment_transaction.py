@@ -42,6 +42,16 @@ class TransactionOsb(models.Model):
     # FORM RELATED METHODS
     # --------------------------------------------------
 
+    def _get_specific_processing_values(self, processing_values):
+        """ Override of payment to bind the form token request of the embedded fields to this
+        transaction: /payment/osb/createFormToken requires this access token on payment submit. """
+        res = super()._get_specific_processing_values(processing_values)
+        if self.provider_code not in ['osb', 'osbmulti']:
+            return res
+
+        res['osb_access_token'] = self.provider_id._osb_get_form_token_access('tx', self.id)
+        return res
+
     def _get_specific_rendering_values(self, processing_values):
         """ Override of payment to return Osb specific rendering values. """
         res = super()._get_specific_rendering_values(processing_values)
