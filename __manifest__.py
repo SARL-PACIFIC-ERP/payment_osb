@@ -9,7 +9,7 @@
 
 {
     'name': 'OSB Payment Provider',
-    'version': '19.0.4.3.0',
+    'version': '20.0.4.3.0',
     'summary': 'Accept payments with OSB secure payment gateway.',
     'category': 'Accounting/Payment Providers',
     'author': 'Lyra Network',
