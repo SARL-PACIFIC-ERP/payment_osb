@@ -35,7 +35,7 @@ class OsbRestController(http.Controller):
             payment_transaction = request.env['payment.transaction'].sudo().search([('reference', '=', processing_values["reference"])]).exists()
 
             sale_order = payment_transaction.sale_order_ids[0]
-            if not sale_order._is_cart_ready_for_payment():
+            if not (sale_order._is_cart_ready_for_checkout() and sale_order._is_cart_ready_for_payment()):
                 raise ValidationError(request.env._("Your cart is not ready to be paid, please verify previous steps."))
 
             # Check amount coherence.

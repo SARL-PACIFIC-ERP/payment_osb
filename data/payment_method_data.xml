@@ -14,6 +14,7 @@
         <field name="code">osb</field>
         <field name="provider_id" ref="payment_provider_osb" />
         <field name="sequence">1000</field>
+        <field name="active">True</field>
         <field name="image" type="bytes" file="payment/static/img/card.png" />
         <field name="support_tokenization">False</field>
         <field name="support_express_checkout">False</field>
@@ -24,6 +25,7 @@
         <field name="code">osbmulti</field>
         <field name="provider_id" ref="payment_provider_osbmulti" />
         <field name="sequence">1000</field>
+        <field name="active">True</field>
         <field name="image" type="bytes" file="payment/static/img/card.png" />
         <field name="support_tokenization">False</field>
         <field name="support_express_checkout">False</field>

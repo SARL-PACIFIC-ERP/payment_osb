@@ -330,7 +330,10 @@ class ProviderOsb(models.Model):
         if self.code not in ['osb', 'osbmulti']:
             return super()._get_default_payment_method_codes()
 
-        return self.code
+        # No default codes: since Odoo 20, _activate_default_pms() runs on install and would also
+        # activate all the brands of the listed primary methods, including those that the data
+        # declares inactive. The methods keep the active value set in payment_method_data.xml.
+        return set()
 
     def get_osb_currencies(self):
         first_elements = []
@@ -429,4 +432,5 @@ class ProviderOsb(models.Model):
 
             return False
 
-        return super()._should_build_inline_form(is_validation=True)
+        # payment.provider._should_build_inline_form() no longer exists in Odoo 20.
+        return False
