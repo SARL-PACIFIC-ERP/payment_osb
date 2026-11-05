@@ -65,11 +65,13 @@ class OsbController(http.Controller):
     )
     def osb_return_from_checkout(self, **pdt_data):
         # Check payment result and create transaction.
-        _logger.info('OSB: entering _from_notification with data %s', pprint.pformat(pdt_data))
+        _logger.debug('OSB: entering _from_notification with data %s', pprint.pformat(pdt_data))
 
         try:
             is_rest = False
-            data = pdt_data
+            # is_rest is only set below, once the REST signature is verified: never read it from
+            # the POST, or an unsigned form notification would skip the signature check.
+            data = {key: value for key, value in pdt_data.items() if key != 'is_rest'}
             providers_sudo = request.env['payment.provider']
 
             # Check the type of integration.
@@ -98,11 +100,13 @@ class OsbController(http.Controller):
     )
     def osb_ipn(self, **post):
         # Check payment result and create transaction.
-        _logger.info('OSB: entering IPN _get_tx_from_notification with post data %s', pprint.pformat(post))
+        _logger.debug('OSB: entering IPN _get_tx_from_notification with post data %s', pprint.pformat(post))
 
         try:
             is_rest = False
-            data = post
+            # is_rest is only set below, once the REST signature is verified: never read it from
+            # the POST, or an unsigned form notification would skip the signature check.
+            data = {key: value for key, value in post.items() if key != 'is_rest'}
             providers_sudo = request.env['payment.provider']
 
             # Check the type of integration.
