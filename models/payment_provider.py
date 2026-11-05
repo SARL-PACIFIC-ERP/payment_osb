@@ -352,11 +352,13 @@ class ProviderOsb(models.Model):
 
         return supported_currencies
 
+    # The REST secrets return '' when not configured: str(False) would give the key 'False',
+    # with which anyone could sign a REST response (gap left by the upstream Lyra v4.3.4 fix).
     def _osb_get_rest_password(self):
         if self.state == 'test':
-            return str(self.osb_test_password)
+            return self.osb_test_password or ''
 
-        return str(self.osb_prod_password)
+        return self.osb_prod_password or ''
 
     def _osb_get_rest_public_key(self):
         if self.state == 'test':
@@ -366,9 +368,9 @@ class ProviderOsb(models.Model):
 
     def _osb_get_rest_sha256_key(self):
         if self.state == 'test':
-            return str(self.osb_sha256_test_key)
+            return self.osb_sha256_test_key or ''
 
-        return str(self.osb_sha256_prod_key)
+        return self.osb_sha256_prod_key or ''
 
     def _osb_get_javascript_server_url(self):
         return constants.OSB_PARAMS.get('STATIC_URL') + "js/krypton-client/V4.0/stable/kr-payment-form.min.js"
