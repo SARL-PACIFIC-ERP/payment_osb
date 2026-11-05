@@ -28,6 +28,13 @@ def find_currency(iso):
 
     return None
 
+def find_currency_by_num(num):
+    for currency in OSB_CURRENCIES:
+        if currency[1] == num:
+            return currency
+
+    return None
+
 def _osb_get_contrib():
     return OSB_PARAMS.get('CMS_IDENTIFIER') + u'_' + OSB_PARAMS.get('PLUGIN_VERSION') + u'/' + release.version
 

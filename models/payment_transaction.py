@@ -157,6 +157,25 @@ class TransactionOsb(models.Model):
 
         return self._osb_get_tx_from_notification_data(notification_data)
 
+    def _osb_paid_amount_matches(self, notification_data):
+        """Return whether the notification pays the amount of the transaction, in its currency.
+
+        Odoo 18 has no payment._validate_amount (added in 19): without this check, a signed
+        payment of another amount would mark the transaction done and confirm the order. On a
+        currency conversion, the amount of the transaction is in the vads_effective_* pair.
+        """
+        for amount_key, currency_key in (('vads_amount', 'vads_currency'),
+                                         ('vads_effective_amount', 'vads_effective_currency')):
+            currency = tools.find_currency_by_num(notification_data.get(currency_key))
+            amount = str(notification_data.get(amount_key, ''))
+            if currency is None or currency[0] != self.currency_id.name or not amount.isdigit():
+                continue
+
+            if self.currency_id.compare_amounts(int(amount) / 10 ** currency[2], self.amount) == 0:
+                return True
+
+        return False
+
     def _process_notification_data(self, notification_data):
         super()._process_notification_data(notification_data)
         if self.provider_code != 'osb' and self.provider_code != 'osbmulti':
@@ -186,7 +205,10 @@ class TransactionOsb(models.Model):
         }
 
         status = notification_data.get('vads_trans_status')
-        if status in self.osb_statuses['success']:
+        paid = status in self.osb_statuses['success'] or status in self.osb_statuses['pending']
+        if paid and not self._osb_paid_amount_matches(notification_data):
+            self._set_error(_('The paid amount or currency does not match the transaction.'))
+        elif status in self.osb_statuses['success']:
             self.write(values)
             self._set_done()
         elif status in self.osb_statuses['pending']:
