@@ -21,6 +21,36 @@ class OsbController(http.Controller):
     _notify_url = '/payment/osb/ipn'
     _return_url = '/payment/osb/return'
 
+    def _get_providers_from_rest_response(self, post_data, flow):
+        """Return the Osb providers whose secret key signs the raw kr-answer (Lyra v4.3.4 fix).
+
+        Called before kr-answer is parsed. Lyra signs the IPN with the REST password and the
+        return to shop with the HMAC-SHA-256 key. Unlike upstream, all the matching providers
+        are returned, so that two providers sharing the same keys do not reject each other.
+        """
+        providers = request.env['payment.provider'].sudo().search([('code', 'in', ['osb', 'osbmulti'])])
+
+        def signs(provider):
+            key = provider._osb_get_rest_password() if flow == 'ipn' else provider._osb_get_rest_sha256_key()
+            return tools.check_hash(post_data, key)
+
+        return providers.filtered(signs)
+
+    def _verify_rest_response(self, post_data, flow):
+        """Authenticate a REST response, then make sure kr-answer is a JSON object.
+
+        :return: The providers whose key signs the response.
+        :raise ValidationError: If the signature is missing or invalid, or kr-answer is not JSON.
+        """
+        providers_sudo = self._get_providers_from_rest_response(post_data, flow)
+        if not providers_sudo:
+            raise ValidationError('Osb Collect: missing or invalid kr-hash signature, REST response rejected.')
+
+        if tools.parse_rest_answer(post_data) is None:
+            raise ValidationError('Osb Collect: kr-answer is not a JSON object, REST response rejected.')
+
+        return providers_sudo
+
     def _get_return_url(self, result, **pdt_data):
         return_url = pdt_data.pop('return_url', '')
 
@@ -40,24 +70,21 @@ class OsbController(http.Controller):
         try:
             is_rest = False
             data = pdt_data
+            providers_sudo = request.env['payment.provider']
 
             # Check the type of integration.
             if tools.check_rest_response(pdt_data):
+                # Verify the signature of the raw kr-answer before parsing it.
+                providers_sudo = self._verify_rest_response(pdt_data, 'return')
+
                 data = tools.convert_rest_result(pdt_data)
                 data['is_rest'] = '1'
                 is_rest = True
 
             tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data('osb', data)
 
-            # Verify hash.
-            if is_rest:
-                hmac256_key = tx_sudo.provider_id._osb_get_rest_sha256_key()
-                hash_checked = tools.check_hash(pdt_data, hmac256_key)
-                if not hash_checked:
-                    error_msg = 'Osb Collect: invalid signature for data {}'.format(pdt_data)
-                    _logger.info(error_msg)
-
-                    raise ValidationError(error_msg)
+            if is_rest and tx_sudo.provider_id not in providers_sudo:
+                raise ValidationError('Osb Collect: REST response signed for another provider, rejected.')
 
             # Handle the notification data.
             tx_sudo._handle_notification_data('osb', data)
@@ -77,9 +104,13 @@ class OsbController(http.Controller):
         try:
             is_rest = False
             data = post
+            providers_sudo = request.env['payment.provider']
 
             # Check the type of integration.
             if tools.check_rest_response(post):
+                # Verify the signature of the raw kr-answer before parsing it.
+                providers_sudo = self._verify_rest_response(post, 'ipn')
+
                 if not tools.order_cycle_closed(post):
                     return 'Payment failure.'
 
@@ -89,14 +120,8 @@ class OsbController(http.Controller):
 
             result = request.env['payment.transaction'].sudo()._get_tx_from_notification_data('osb', data)
 
-            if is_rest:
-                rest_password = result.provider_id._osb_get_rest_password()
-                hash_checked = tools.check_hash(post, rest_password)
-                if not hash_checked:
-                    error_msg = 'Osb Collect: invalid signature for data {}'.format(post)
-                    _logger.info(error_msg)
-
-                    raise ValidationError(error_msg)
+            if is_rest and result.provider_id not in providers_sudo:
+                raise ValidationError('Osb Collect: REST response signed for another provider, rejected.')
 
             if (data.get('vads_trans_status') == 'ABANDONED') or (data.get('vads_trans_status') == 'CANCELED') and (data.get('vads_order_status') == 'UNPAID') and (data.get('vads_order_cycle') == 'CLOSED'):
                 return 'Payment abandoned.'
