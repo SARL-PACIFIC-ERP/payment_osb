@@ -143,6 +143,7 @@ class TestOsbSmoke(PaymentHttpCommon):
             'reference': tx.reference,
             'amount': order.amount_total,
             'currency_id': self.currency.id,
+            'osb_access_token': tx._get_specific_processing_values({})['osb_access_token'],
         }
         with patch('odoo.addons.payment_osb.controllers.rest.requests.post', return_value=FakeResponse()):
             response = self.url_open('/payment/osb/createFormToken', data=json.dumps(payload),

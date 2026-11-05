@@ -19,6 +19,7 @@ from odoo.exceptions import ValidationError
 from odoo.tools import float_round
 from odoo.tools import get_lang
 from odoo.http import request
+from odoo.tools.misc import hmac as hmac_tool
 
 from ..controllers.main import OsbController
 from ..helpers import constants, tools
@@ -255,6 +256,8 @@ class ProviderOsb(models.Model):
 
     def osb_generate_values_from_order(self, data):
         sale_order = request.env['sale.order'].sudo().search([('id', '=', data['order_id'])]).exists()
+        if not sale_order:
+            return {}
 
         currency = self._osb_get_currency(data['currency_id'])
         amount = float(sale_order.amount_total)
@@ -373,6 +376,29 @@ class ProviderOsb(models.Model):
 
         return self.osb_sha256_prod_key or ''
 
+    def _osb_get_form_token_access(self, kind, *values):
+        """Return the access token binding a createFormToken request to the given values.
+
+        kind is 'order' (payment method selection: order, partner, currency) or 'tx' (payment
+        submit: transaction id). The token is only rendered to the owner of the payment form or
+        of the transaction, so that nobody else can have a form token created for an order and
+        its customer's data sent to the gateway. Each kind has a scope of its own and the values
+        are encoded without ambiguity: a token of one kind never matches the other, whatever a
+        customer puts in a transaction reference. Same principle as
+        payment.utils.generate_access_token.
+        """
+        self.ensure_one()
+        message = json.dumps([self.id, *(str(value) for value in values)])
+        return hmac_tool(self.env(su=True), 'payment_osb.create_form_token.%s' % kind, message)
+
+    def _osb_check_form_token_access(self, access_token, kind, *values):
+        """Return whether access_token was issued by _osb_get_form_token_access for these values."""
+        if not isinstance(access_token, str):
+            return False
+
+        expected = self._osb_get_form_token_access(kind, *values)
+        return hmac.compare_digest(expected.encode('utf-8'), access_token.encode('utf-8'))
+
     def _osb_get_javascript_server_url(self):
         return constants.OSB_PARAMS.get('STATIC_URL') + "js/krypton-client/V4.0/stable/kr-payment-form.min.js"
 
@@ -419,7 +445,9 @@ class ProviderOsb(models.Model):
             "shipping_address_id": sale_order.partner_shipping_id.id,
             "entry_mode": self.osb_payment_data_entry_mode,
             "pop_in": self.osb_embedded_pop_in,
-            "compact": self.osb_embedded_compact_mode
+            "compact": self.osb_embedded_compact_mode,
+            # Proves to /payment/osb/createFormToken that the request comes from this payment form.
+            "osb_access_token": self._osb_get_form_token_access('order', str(sale_order_id), partner_id, currency.id),
         }
 
         return json.dumps(values)

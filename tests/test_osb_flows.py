@@ -105,7 +105,8 @@ class TestOsbFlows(PaymentHttpCommon):
         order.order_line.unlink()
         self.assertFalse(order._is_cart_ready_for_checkout())
         payload = {'provider_id': self.provider.id, 'reference': tx.reference, 'amount': 0.0,
-                   'currency_id': self.currency.id}
+                   'currency_id': self.currency.id,
+                   'osb_access_token': tx._get_specific_processing_values({})['osb_access_token']}
         with patch('odoo.addons.payment_osb.controllers.rest.requests.post') as post_mock:
             response = self.url_open('/payment/osb/createFormToken', data=json.dumps(payload),
                                      headers={'Content-Type': 'application/json'}, method='POST')
