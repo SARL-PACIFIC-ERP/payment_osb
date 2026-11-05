@@ -66,6 +66,9 @@ class TestOsbFormToken(PaymentHttpCommon):
         self.assertEqual(result, {'formToken': 'TOKEN'})
         sent = post_mock.call_args.kwargs['json']
         self.assertEqual(sent['orderId'], self.order.name)
+        # Shipping details belong to the customer object of the Lyra REST API.
+        self.assertIn('shippingDetails', sent['customer'])
+        self.assertNotIn('shipingDetails', sent)
 
     @mute_logger(REST_LOGGER)
     def test_order_of_another_customer_refused(self):
