@@ -133,17 +133,17 @@ class OsbRestController(http.Controller):
                     "phoneNumber": values["vads_cust_phone"],
                     "country": values["vads_cust_country"],
                     "language": values["vads_language"],
+                },
+                "shippingDetails": {
+                    "firstName": values["vads_ship_to_first_name"],
+                    "lastName": values["vads_ship_to_last_name"],
+                    "address": values["vads_ship_to_street"],
+                    "zipCode": values["vads_ship_to_zip"],
+                    "city": values["vads_ship_to_city"],
+                    "state": values["vads_ship_to_state"],
+                    "phoneNumber": values["vads_ship_to_phone_num"],
+                    "country": values["vads_ship_to_country"],
                 }
-            },
-            "shipingDetails": {
-                "firstName": values["vads_ship_to_first_name"],
-                "lastName": values["vads_ship_to_last_name"],
-                "address": values["vads_ship_to_street"],
-                "zipCode": values["vads_ship_to_zip"],
-                "city": values["vads_ship_to_city"],
-                "state": values["vads_ship_to_state"],
-                "phoneNumber": values["vads_ship_to_phone_num"],
-                "country": values["vads_ship_to_country"],
             },
             "transactionOptions": {
                 "cardOptions": {
