@@ -8,6 +8,7 @@
 # License:   http://www.gnu.org/licenses/agpl.html GNU Affero General Public License (AGPL v3)
 
 from datetime import datetime
+import hmac
 import logging
 
 from odoo import models, api, fields, _
@@ -133,11 +134,10 @@ class TransactionOsb(models.Model):
         # Verify signature.
         if shasign:
             shasign_check = tx.provider_id._osb_generate_sign('out', notification_data)
-            if shasign_check.upper() != shasign.upper():
-                error_msg = 'Osb Collect: invalid signature, received {}, computed {}, for data {}'.format(shasign, shasign_check, notification_data)
-                _logger.info(error_msg)
-
-                raise ValidationError(error_msg)
+            # Constant time comparison, case insensitive as before. Neither the computed signature
+            # nor the notification data are logged: they would let a log reader forge a notification.
+            if not hmac.compare_digest(shasign_check.upper().encode('utf-8'), shasign.upper().encode('utf-8')):
+                raise ValidationError('Osb Collect: invalid signature for transaction {}.'.format(tx.reference))
 
         return tx
 
