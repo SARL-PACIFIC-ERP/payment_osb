@@ -2,7 +2,7 @@
 
 /**
  * Copyright © Lyra Network.
- * This file is part of Lyra Collect plugin for Odoo. See COPYING.md for license details.
+ * This file is part of OSB plugin for Odoo. See COPYING.md for license details.
  *
  * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Copyright © Lyra Network
@@ -11,10 +11,10 @@
 
 let popin = false;
 
-export function lyraCheckAmount() {
+export function osbCheckAmount() {
     var observer = new MutationObserver( function(mutations) {
         mutations.forEach((mutation) => {
-            const checkedRadio = document.querySelectorAll("[data-payment-method-code='lyra']")[0];
+            const checkedRadio = document.querySelectorAll("[data-payment-method-code='osb']")[0];
             if (checkedRadio && checkedRadio.checked) {
                 console.log("Amount total sumary has changed. We may have to re-create form token.");
                 checkedRadio.click();
@@ -29,35 +29,35 @@ export function lyraCheckAmount() {
     observer.observe(amount_total_summary, config);
 }
 
-export function lyraHidePreMessage() {
-    if ($('#lyra-embedded-wrapper').length > 0) {
-        let paymentOption = document.querySelector('input[data-provider-code="lyra"]');
+export function osbHidePreMessage() {
+    if ($('#osb-embedded-wrapper').length > 0) {
+        let paymentOption = document.querySelector('input[data-provider-code="osb"]');
         if (paymentOption) {
             parent = paymentOption.parentElement.parentElement.parentElement;
             let elem = parent.children[1];
 
-            if (parent.nextElementSibling.contains($('#lyra-embedded-wrapper')[0])) {
+            if (parent.nextElementSibling.contains($('#osb-embedded-wrapper')[0])) {
                 elem.textContent = '';
             }
         }
     }
 }
 
-export async function lyraPrepareInlineForm(inlineValues) {
+export async function osbPrepareInlineForm(inlineValues) {
     var deliveryCarrier = document.querySelector('#delivery_carrier');
     if (deliveryCarrier !== null) {
-        localStorage.removeItem('lyraFormToken');
-        localStorage.removeItem('lyraFormTokenData');
+        localStorage.removeItem('osbFormToken');
+        localStorage.removeItem('osbFormTokenData');
     }
 
     // If there is already a stored token, check if payment data has changed.
-    var formToken = getLyraItem('lyraFormToken');
-    var tokenData = getLyraItem('lyraFormTokenData');
+    var formToken = getOsbItem('osbFormToken');
+    var tokenData = getOsbItem('osbFormTokenData');
     if ((formToken !== null) && (tokenData == JSON.stringify(inlineValues))) {
         console.log('Payment details did not change on method display. Use the existing token.');
-        lyraDisplayEmbeddedForm(formToken, inlineValues);
+        osbDisplayEmbeddedForm(formToken, inlineValues);
     } else {
-        await fetch('/payment/lyra/createFormToken', {
+        await fetch('/payment/osb/createFormToken', {
             method: "POST",
             headers: {
                 "Content-Type":"application/json",
@@ -70,16 +70,16 @@ export async function lyraPrepareInlineForm(inlineValues) {
                 return;
             } else {
                 formToken = data["formToken"];
-                setLyraItem('lyraFormToken', formToken, 15*60*1000);
-                setLyraItem('lyraFormTokenData', JSON.stringify(inlineValues), 15*60*1000);
+                setOsbItem('osbFormToken', formToken, 15*60*1000);
+                setOsbItem('osbFormTokenData', JSON.stringify(inlineValues), 15*60*1000);
             }
 
-            lyraDisplayEmbeddedForm(formToken, inlineValues);
+            osbDisplayEmbeddedForm(formToken, inlineValues);
         });
     }
 }
 
-async function lyraDisplayEmbeddedForm(formToken, inlineValues) {
+async function osbDisplayEmbeddedForm(formToken, inlineValues) {
     // Create a div for embedded form.
     let embeddedDiv = document.createElement("div");
     embeddedDiv.setAttribute("class", "kr-smart-form");
@@ -87,7 +87,7 @@ async function lyraDisplayEmbeddedForm(formToken, inlineValues) {
     if (inlineValues["pop_in"] === "1") {
         popin = true;
         embeddedDiv.setAttribute("kr-popin", "");
-        document.getElementById("lyra-embedded-wrapper").appendChild(embeddedDiv);
+        document.getElementById("osb-embedded-wrapper").appendChild(embeddedDiv);
     } else {
         embeddedDiv.setAttribute("kr-single-payment-button", "");
     }
@@ -99,7 +99,7 @@ async function lyraDisplayEmbeddedForm(formToken, inlineValues) {
         }
     }
 
-    document.getElementById("lyra-embedded-wrapper").appendChild(embeddedDiv);
+    document.getElementById("osb-embedded-wrapper").appendChild(embeddedDiv);
 
     var __vadsFormConfig = { formToken: formToken };
     if (inlineValues["compact"] === "1") {
@@ -110,13 +110,13 @@ async function lyraDisplayEmbeddedForm(formToken, inlineValues) {
     await KR.setFormConfig(__vadsFormConfig);
 }
 
-export async function lyraProcessDirectFlow(inlineValues, processingValues) {
-    var formToken = getLyraItem('lyraFormToken');
+export async function osbProcessDirectFlow(inlineValues, processingValues) {
+    var formToken = getOsbItem('osbFormToken');
 
-    if (getLyraItem('lyraFormTokenData') == JSON.stringify(inlineValues)) {
+    if (getOsbItem('osbFormTokenData') == JSON.stringify(inlineValues)) {
         console.log('Payment details did not change on payment submit. Use the existing token.');
     } else {
-        await fetch('/payment/lyra/createFormToken', {
+        await fetch('/payment/osb/createFormToken', {
             method: "POST",
             headers: {
                 "Content-Type":"application/json",
@@ -136,11 +136,11 @@ export async function lyraProcessDirectFlow(inlineValues, processingValues) {
 
     if (formToken) {
         await KR.setFormConfig({ formToken: formToken });
-        lyraSubmitPayment();
+        osbSubmitPayment();
     }
 }
 
-export function lyraSubmitPayment() {
+export function osbSubmitPayment() {
     if (popin) {
         KR.openPopin();
     } else {
@@ -148,7 +148,7 @@ export function lyraSubmitPayment() {
     }
 }
 
-function setLyraItem(key, value, ttl) {
+function setOsbItem(key, value, ttl) {
     let item = {
         value: value,
         expiry: ttl ? Date.now() + ttl : null
@@ -157,7 +157,7 @@ function setLyraItem(key, value, ttl) {
     localStorage.setItem(key, JSON.stringify(item));
 }
 
-function getLyraItem(key) {
+function getOsbItem(key) {
     let item = localStorage.getItem(key);
 
     // if the item doesn't exist, return null
