@@ -12,6 +12,12 @@
 let popin = false;
 
 export function osbCheckAmount() {
+    // Only the eCommerce payment step displays the amount summary.
+    var amount_total_summary = document.querySelector('#amount_total_summary');
+    if (amount_total_summary === null) {
+        return;
+    }
+
     var observer = new MutationObserver( function(mutations) {
         mutations.forEach((mutation) => {
             const checkedRadio = document.querySelectorAll("[data-payment-method-code='osb']")[0];
@@ -25,21 +31,22 @@ export function osbCheckAmount() {
     // Configure and start observing the target element for changes in child nodes.
     var config = { characterData: true, childList: true, subtree: true };
 
-    var amount_total_summary = document.querySelector('#amount_total_summary');
     observer.observe(amount_total_summary, config);
 }
 
 export function osbHidePreMessage() {
-    if ($('#osb-embedded-wrapper').length > 0) {
-        let paymentOption = document.querySelector('input[data-provider-code="osb"]');
-        if (paymentOption) {
-            parent = paymentOption.parentElement.parentElement.parentElement;
-            let elem = parent.children[1];
+    // The help message of the provider announces the redirection to the payment page: hide it
+    // when the embedded fields are displayed below the payment option instead.
+    const wrapper = document.getElementById('osb-embedded-wrapper');
+    const paymentOption = document.querySelector('input[data-provider-code="osb"]');
+    const option = paymentOption?.closest('[for="o_payment_radio"]');
+    if (!wrapper || !option) {
+        return;
+    }
 
-            if (parent.nextElementSibling.contains($('#osb-embedded-wrapper')[0])) {
-                elem.textContent = '';
-            }
-        }
+    const helpMessage = option.querySelector(':scope > div.small');
+    if (helpMessage && option.nextElementSibling?.contains(wrapper)) {
+        helpMessage.textContent = '';
     }
 }
 
@@ -55,39 +62,59 @@ export async function osbPrepareInlineForm(inlineValues) {
     var tokenData = getOsbItem('osbFormTokenData');
     if ((formToken !== null) && (tokenData == JSON.stringify(inlineValues))) {
         console.log('Payment details did not change on method display. Use the existing token.');
-        osbDisplayEmbeddedForm(formToken, inlineValues);
-    } else {
-        await fetch('/payment/osb/createFormToken', {
+        return await osbDisplayEmbeddedForm(formToken, inlineValues);
+    }
+
+    formToken = await osbCreateFormToken(inlineValues);
+    // If form token was not created, fallback to redirection mode.
+    if (!formToken) {
+        return false;
+    }
+
+    setOsbItem('osbFormToken', formToken, 15*60*1000);
+    setOsbItem('osbFormTokenData', JSON.stringify(inlineValues), 15*60*1000);
+
+    return await osbDisplayEmbeddedForm(formToken, inlineValues);
+}
+
+/**
+ * Ask the server for a form token and return it, or false when none was created. A network
+ * error or an unexpected answer is reported in the console rather than thrown: the caller then
+ * falls back to the redirect flow.
+ */
+async function osbCreateFormToken(values) {
+    try {
+        const response = await fetch('/payment/osb/createFormToken', {
             method: "POST",
             headers: {
                 "Content-Type":"application/json",
             },
-            body: JSON.stringify(inlineValues),
-        }).then(response => { return response.json() })
-            .then(data => {
-            // If form token was not created , fallback to redirection mode.
-            if (data["formToken"] === false) {
-                return;
-            } else {
-                formToken = data["formToken"];
-                setOsbItem('osbFormToken', formToken, 15*60*1000);
-                setOsbItem('osbFormTokenData', JSON.stringify(inlineValues), 15*60*1000);
-            }
-
-            osbDisplayEmbeddedForm(formToken, inlineValues);
+            body: JSON.stringify(values),
         });
+        const data = await response.json();
+
+        return data["formToken"] || false;
+    } catch (error) {
+        console.error('Error while creating form token.', error);
+
+        return false;
     }
 }
 
 async function osbDisplayEmbeddedForm(formToken, inlineValues) {
+    const wrapper = document.getElementById("osb-embedded-wrapper");
+    if (wrapper === null) {
+        return false;
+    }
+
     // Create a div for embedded form.
     let embeddedDiv = document.createElement("div");
     embeddedDiv.setAttribute("class", "kr-smart-form");
 
-    if (inlineValues["pop_in"] === "1") {
-        popin = true;
+    const isPopin = inlineValues["pop_in"] === "1";
+    if (isPopin) {
         embeddedDiv.setAttribute("kr-popin", "");
-        document.getElementById("osb-embedded-wrapper").appendChild(embeddedDiv);
+        wrapper.appendChild(embeddedDiv);
     } else {
         embeddedDiv.setAttribute("kr-single-payment-button", "");
     }
@@ -99,7 +126,7 @@ async function osbDisplayEmbeddedForm(formToken, inlineValues) {
         }
     }
 
-    document.getElementById("osb-embedded-wrapper").appendChild(embeddedDiv);
+    wrapper.appendChild(embeddedDiv);
 
     var __vadsFormConfig = { formToken: formToken };
     if (inlineValues["compact"] === "1") {
@@ -107,37 +134,58 @@ async function osbDisplayEmbeddedForm(formToken, inlineValues) {
         __vadsFormConfig['smartForm']= { layout: 'compact'};
     }
 
-    await KR.setFormConfig(__vadsFormConfig);
+    // The gateway client rejects an expired or inconsistent form token: remove the embedded fields
+    // and let the caller fall back to the redirect flow.
+    if (!(await osbSetFormConfig(__vadsFormConfig))) {
+        embeddedDiv.remove();
+        return false;
+    }
+
+    popin = isPopin;
+
+    return true;
 }
 
+async function osbSetFormConfig(formConfig) {
+    try {
+        await KR.setFormConfig(formConfig);
+
+        return true;
+    } catch (error) {
+        console.log('The gateway client rejected the form token.', error);
+
+        return false;
+    }
+}
+
+/**
+ * Open the embedded payment fields with a valid form token and return true, or return false when
+ * there is none (stored token expired, refused request, gateway error) so that the caller falls
+ * back to the gateway payment page.
+ */
 export async function osbProcessDirectFlow(inlineValues, processingValues) {
     var formToken = getOsbItem('osbFormToken');
 
     if (getOsbItem('osbFormTokenData') == JSON.stringify(inlineValues)) {
         console.log('Payment details did not change on payment submit. Use the existing token.');
     } else {
-        await fetch('/payment/osb/createFormToken', {
-            method: "POST",
-            headers: {
-                "Content-Type":"application/json",
-            },
-            body: JSON.stringify(processingValues),
-        }).then(response => { return response.json() })
-            .then(async data => {
-            if (! data["formToken"]) {
-                console.log('Error while creating form token.');
-            } else if (data["formToken"] == 'NO_UPDATE') {
-                console.log('Payment details did not change on payment submit. Use the existing token.');
-            } else {
-                formToken = data["formToken"];
-            }
-        });
+        const newFormToken = await osbCreateFormToken(processingValues);
+        if (!newFormToken) {
+            console.log('Error while creating form token.');
+        } else if (newFormToken == 'NO_UPDATE') {
+            console.log('Payment details did not change on payment submit. Use the existing token.');
+        } else {
+            formToken = newFormToken;
+        }
     }
 
-    if (formToken) {
-        await KR.setFormConfig({ formToken: formToken });
-        osbSubmitPayment();
+    if (!formToken || !(await osbSetFormConfig({ formToken: formToken }))) {
+        return false;
     }
+
+    osbSubmitPayment();
+
+    return true;
 }
 
 export function osbSubmitPayment() {
