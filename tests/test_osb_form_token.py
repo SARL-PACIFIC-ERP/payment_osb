@@ -2,6 +2,7 @@
 # owner of the payment form or of the transaction, and malformed payloads are refused cleanly.
 import json
 from types import SimpleNamespace
+from unittest import SkipTest
 from unittest.mock import patch
 
 from odoo.tests import tagged
@@ -23,6 +24,10 @@ class TestOsbFormToken(PaymentHttpCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # The embedded payment form and its createFormToken route need eCommerce (sales orders,
+        # cart checks), which payment_osb does not depend on.
+        if 'website_sale' not in cls.env['ir.module.module']._installed():
+            raise SkipTest("The embedded payment form needs eCommerce (website_sale).")
         cls.enable_process_patcher = False
         cls.enable_post_process_patcher = False
         cls.provider = cls._prepare_provider('osb', update_values={

@@ -86,6 +86,8 @@ class TestOsbFlows(PaymentHttpCommon):
         self.assertEqual(tx.state, 'cancel')
 
     def test_sale_order_confirmed_after_processing(self):
+        if 'sale' not in self.env['ir.module.module']._installed():
+            self.skipTest("Needs Sales (sale).")
         order = self._order('OSB flow product')
         tx = self._create_transaction('redirect', reference='OSBSO', amount=order.amount_total,
                                       sale_order_ids=[(6, 0, order.ids)])
@@ -99,6 +101,8 @@ class TestOsbFlows(PaymentHttpCommon):
 
     @mute_logger('odoo.http')
     def test_create_form_token_refused_for_empty_cart(self):
+        if 'website_sale' not in self.env['ir.module.module']._installed():
+            self.skipTest("Needs eCommerce (website_sale).")
         order = self._order('OSB empty cart product')
         tx = self._create_transaction('direct', reference='%s-1' % order.name, amount=100.0,
                                       sale_order_ids=[(6, 0, order.ids)])

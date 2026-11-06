@@ -67,6 +67,8 @@ class TestOsbSmoke(PaymentHttpCommon):
         self.assertNotIn(self.provider, providers)
 
     def test_03_pay_page_embedded_then_redirect(self):
+        if 'website_sale' not in self.env['ir.module.module']._installed():
+            self.skipTest("Needs eCommerce (website_sale).")
         self.provider.osb_payment_data_entry_mode = 'embedded'
         response = self._portal_pay(**self._prepare_pay_values())
         self.assertEqual(response.status_code, 200)
@@ -125,6 +127,8 @@ class TestOsbSmoke(PaymentHttpCommon):
         self.assertEqual(tx.state, 'error')
 
     def test_09_create_form_token_on_submit(self):
+        if 'website_sale' not in self.env['ir.module.module']._installed():
+            self.skipTest("Needs eCommerce (website_sale).")
         product = self.env['product.product'].create({'name': 'OSB product', 'list_price': 100.0, 'type': 'service'})
         order = self.env['sale.order'].create({
             'partner_id': self.partner.id,
